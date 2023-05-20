@@ -119,4 +119,54 @@ def score_position(board, piece):
 
     return Score
 
+def minimax(board, depth, alpha, beta, maximizingPlayer):
+    validLocations = getValidLocations(board)
+    isTerminal = is_terminal_node(board)
+
+    if depth == 0 or isTerminal:
+        if isTerminal:
+            if winningMove(board, AI_PIECE):
+                return (None, 10000000)
+            elif winningMove(board, PLAYER_PIECE):
+                return (None, -10000000)
+            else:
+                return (None, 0)
+        else:
+            return (None, score_position(board, AI_PIECE))
+
+    if maximizingPlayer:
+        value = -math.inf
+        column = random.choice(validLocations)
+
+        for col in validLocations:
+            row = getNextOpenRow(board, col)
+            b_copy = board.copy()
+            dropPiece(b_copy, row, col, AI_PIECE)
+            new_score = minimax(b_copy, depth - 1, alpha, beta, False)[1]
+            if new_score > value:
+                value = new_score
+                column = col
+            alpha = max(value, alpha)
+            if alpha >= beta:
+                break
+
+        return column, value
+
+    else:
+        value = math.inf
+        column = random.choice(validLocations)
+        for col in validLocations:
+            row = getNextOpenRow(board, col)
+            b_copy = board.copy()
+            dropPiece(b_copy, row, col, PLAYER_PIECE)
+            new_score = minimax(b_copy, depth - 1, alpha, beta, True)[1]
+            if new_score < value:
+                value = new_score
+                column = col
+            beta = min(value, beta)
+            if alpha >= beta:
+                break
+        return column, value
+
+
 
