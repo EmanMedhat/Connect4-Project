@@ -86,9 +86,6 @@ def winningMove(board, piece):  #piece-> player piece or AI piece
 
 
 
-
-
-
 #if player or ai win or length of returned valid_locations list from get_valid_locations(board) = 0(no more places to put piece in, Game is over)
 #then the is_terminal_node  will be true
 def is_terminal_node(board):
@@ -150,6 +147,97 @@ def score_position(board, piece):
             Score += evaluateWindow(window, piece)
 
     return Score
+
+
+
+#if maximizingPlayer = True -> AI player
+def minimax(board, depth, maximizingPlayer):
+	validLocations = getValidLocations(board)  #return list of valid columns
+	is_terminal = is_terminal_node(board)  #return true if player or ai win or no more places to put piece in(Game is over)
+	if depth == 0 or is_terminal:
+		if is_terminal:  # true if player or ai win or no more places to put piece in
+			if winningMove(board, PLAYER_PIECE):   #true if player win horizontally/vertically/diagonally
+				return (None, -10000000000000)   #assign very small score to player as minimax fnc works for AI only
+			elif winningMove(board, AI_PIECE):  #true if ai win horizontally/vertically/diagonally
+				return (None, 100000000000000)   #assign very large score to AI as minimax fnc works for him only
+			else:  #true if no more places to put piece in (tie),score=0
+				return (None, 0)
+		else: # Depth of search is zero (then find heuristic value of the board)
+			return (None, score_position(board, AI_PIECE))
+	if maximizingPlayer: #maximizingPlayer -> AI player
+		value = -math.inf  #initialize value of score with very small value
+		column = random.choice(validLocations)  #initializa column given to AI with randomly column from valid columns
+		for col in validLocations: #assign values in valid_locations list(indices of valid columns) for col and iterate till size of list
+			row = getNextOpenRow(board, col)  #return index of empty row of valid column
+			b_copy = board.copy()
+			dropPiece(b_copy, row, col, AI_PIECE)
+			new_score = minimax(b_copy, depth-1, False)[1]
+			if new_score > value:
+				value = new_score
+				column = col
+		return column, value
+
+	else: #the opponent's turn and the algorithm will try to find the move with the minimize opponent's score.
+		# Minimizing player ->
+		value = math.inf
+		column = random.choice(validLocations)
+		for col in validLocations:
+			row = getNextOpenRow(board, col)
+			b_copy = board.copy()
+			dropPiece(b_copy, row, col, PLAYER_PIECE)
+			new_score = minimax(b_copy, depth-1, True)[1]
+			if new_score < value:
+				value = new_score
+				column = col
+		return column, value
+
+game_over = False
+
+def end_game():
+    global game_over
+    game_over = True
+    print(game_over)
+
+
+#intial board ->filled with zeros
+board = create_board()
+
+while not game_over:
+
+    if turn == 0:
+		# ask for player 1(player) input
+		# player 1 choose which column he want to put his piece in
+        col = int(input("Player 1, Make your Selection(0-6):"))
+		# Player will drop a piece on the board
+        if isValidLocation(board, col): #checker if selected column is valid
+            row = getNextOpenRow(board, col)  #return index of empty row of selected valid column
+            dropPiece(board, row, col, PLAYER_PIECE)   #put given piece(player_piece) in given row and column
+            turn = 1  #to make the turn for player 2(AI)
+    else:
+        # AI player's turn
+        depth = 4  # Depth of minimax search, you can adjust this
+        start_time = time.time()
+		# minimax algorithm is used in the AI turn only to find optimal move for AI, in player's turn, there is no need to call the minimax function bec player's move based on their  input column
+        col, _ = minimax(board, depth, True)  #colu,_ : interested in return of column whatever return of value is from minmax function
+        end_time = time.time()
+        print(f"AI Player's move took {end_time - start_time:.3f} seconds")
+        if isValidLocation(board, col):  #checker if selected column is valid
+            row = getNextOpenRow(board, col)  #return index of empty row of selected valid column
+            dropPiece(board, row, col, AI_PIECE)  #put given piece(AI_piece) in given row and column
+            turn = 0  #to make the turn for player 1(player)
+
+
+    print_board(board)
+    if winningMove(board, PLAYER_PIECE):
+        print("Player 1 wins!")
+        end_game()
+    elif winningMove(board, AI_PIECE):
+        print("AI Player wins!")
+        end_game()
+    elif len(getValidLocations(board)) == 0:
+        print("It's a tie!")
+        end_game()
+
 # import numpy as np
 # import math
 # import random
