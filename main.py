@@ -167,6 +167,52 @@ def minimax(board, depth, alpha, beta, maximizingPlayer):
             if alpha >= beta:
                 break
         return column, value
+    
+    def getValidLocations(board):
+    valid_locations = []
+
+    for column in range(COLS):
+        if isValidLocation(board, column):
+            valid_locations.append(column)
+
+    return valid_locations
+
+
+def end_game():
+    global game_over
+    game_over = True
+    print(game_over)
+
+
+while not game_over:
+    if turn == 0:
+        col = int(input("Player 1, Make your Selection(0-6):"))
+        if isValidLocation(board, col):
+            row = getNextOpenRow(board, col)
+            dropPiece(board, row, col, PLAYER_PIECE)
+            turn = 1
+    else:
+        # AI player's turn
+        depth = 4  # Depth of minimax search, you can adjust this
+        start_time = time.time()
+        col, _ = minimax(board, depth, -math.inf, math.inf, True)
+        end_time = time.time()
+        print(f"AI Player's move took {end_time - start_time:.3f} seconds")
+        if isValidLocation(board, col):
+            row = getNextOpenRow(board, col)
+            dropPiece(board, row, col, AI_PIECE)
+            turn = 0
+
+    print_board(board)
+    if winningMove(board, PLAYER_PIECE):
+        print("Player 1 wins!")
+        end_game()
+    elif winningMove(board, AI_PIECE):
+        print("AI Player wins!")
+        end_game()
+    elif len(getValidLocations(board)) == 0:
+        print("It's a tie!")
+        end_game()
 
 
 
